@@ -15,9 +15,10 @@ type Product = {
 
 type Props = {
   onAdd?: (id: number) => void;
+  searchQuery?: string;
 };
 
-export default function ProductList({ onAdd }: Props) {
+export default function ProductList({ onAdd, searchQuery = '' }: Props) {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -49,6 +50,19 @@ export default function ProductList({ onAdd }: Props) {
     }
   };
 
+  // Filtrar productos basado en la búsqueda
+  const filteredProducts = React.useMemo(() => {
+    if (!searchQuery.trim()) {
+      return products;
+    }
+    
+    const query = searchQuery.trim().toLowerCase();
+    return products.filter(product => 
+      product.name.toLowerCase().includes(query) ||
+      product.description.toLowerCase().includes(query)
+    );
+  }, [products, searchQuery]);
+
   if (loading) {
     return (
       <div className="py-12 text-center">
@@ -73,9 +87,20 @@ export default function ProductList({ onAdd }: Props) {
     );
   }
 
+  if (filteredProducts.length === 0 && searchQuery.trim()) {
+    return (
+      <div className="py-12 text-center text-gray-500">
+        <div className="text-lg mb-2">No se encontraron productos</div>
+        <div className="text-sm">
+          No hay productos que coincidan con "{searchQuery}"
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-      {products.map((product) => (
+      {filteredProducts.map((product) => (
         <ProductCard 
           key={product.id} 
           product={product} 
